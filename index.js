@@ -30,9 +30,33 @@ async function checkMongo() {
 }
 const db = client.db("HireLoopDB");
 const usersCollection = db.collection("user");
+const jobsCollection = db.collection("job");
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
+});
+
+app.get("/users", async (req, res) => {
+  try {
+    const users = await usersCollection.find().toArray();
+    res.json(users);
+  } catch (err) {
+    console.error("Error fetching users:", err.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.post("/jobs", async (req, res) => {
+  try {
+    const job = req.body;
+    const result = await jobsCollection.insertOne(job);
+    res
+      .status(201)
+      .json({ message: "Job created successfully", jobId: result.insertedId });
+  } catch (err) {
+    console.error("Error creating job:", err.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 app.listen(port, async () => {
