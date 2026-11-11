@@ -1,4 +1,4 @@
-﻿import dotenv from "dotenv";
+﻿﻿import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
 import cors from "cors";
@@ -98,7 +98,23 @@ app.post("/jobs", async (req, res) => {
 // Get all jobs (newest first)
 app.get("/view-jobs", async (req, res) => {
   try {
-    const jobs = await jobsCollection.find().sort({ createdAt: -1 }).toArray();
+    const { search, jobType } = req.query;
+    let query = {};
+    if (search) {
+      query.title = { $regex: search, $options: "i" };
+    }
+    if (jobType) {
+      const jobTypesArray = Array.isArray(jobType)
+        ? jobType
+        : jobType.split(",");
+      query.jobType = { $in: jobTypesArray };
+    }
+
+    const jobs = await jobsCollection
+      .find(query)
+      .sort({ createdAt: -1 })
+      .toArray();
+
     res.json(jobs);
   } catch (err) {
     console.error("Error fetching jobs:", err.message);
